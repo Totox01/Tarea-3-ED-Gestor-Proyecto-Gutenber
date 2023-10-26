@@ -110,6 +110,8 @@ void buscarEnArbol(Libro* nodo, char* palabrasBusqueda) {
   }
 }
 
+
+
 bool estaEnListaBloqueo(char *palabra) {
     char *listaBloqueo[] = {"the","be","to","of","and","a","in","that","have","i","it","for","not","on","whit","he","as","you","do","at","this","but","his","by","from","they","we","say","her","she","or","an","will","my","one","all","would","there","their","what","so","up","out","if","about","who","get","which","go","me","when","make","can","like","time","no","just","him","know","take","people","into","year","your","good","some","could","them","see","other","than","then","now","look","only","come","its","over","think","also","back","after","use","two","how","our","work","first","well","way","even","new","want","because","any","these","give","day","most","us","is","with","are","was","more","had","has","very","much","were","been"};
     int numPalabrasBloqueo = sizeof(listaBloqueo) / sizeof(listaBloqueo[0]);
@@ -167,6 +169,7 @@ void addFile(char* filename) {
     loadedFiles = newNode;
     loadedFilesCount++;
 }
+
 
 void cargarDocumentos() {
     char nombre[1000];
@@ -231,12 +234,15 @@ void cargarDocumentos() {
                       break;
                 }else{
                     printf("El elemento %s no coincide con la opción %s\n",nombre, opcion);
+                  break;
                 }
             }else{
                 printf("El elemento %s no existe\n",nombre);
+              break;
             }
         }else{
             printf("La opción %s no es válida\n", opcion);
+          break;
         }
     }
 }
@@ -310,104 +316,182 @@ void palabrasFrecuencia(char *idLibro) {
   }
 }
 
-int contar_palabras(char *palabra, char *documento) {
+void contar_palabras(char *palabra, char *id, int *veces_palabra, int *num_palabras) {
     char nombreArchivo[1000];
-    sprintf(nombreArchivo, "libro/%s", documento);
-    FILE *archivo = fopen(nombreArchivo, "r");
-    if (archivo == NULL) {
-        printf("Error al abrir el archivo %s\n", nombreArchivo);
-        return 0;
-    }
-
-    int count = 0;
-    char palabraArchivo[MAX_WORD_LENGTH];
-    while (fscanf(archivo, "%s", palabraArchivo) != EOF) {
-        toLowerCase(palabraArchivo);
-        if (strcmp(palabraArchivo, palabra) == 0) {
-            count++;
-        }
-    }
-
-    fclose(archivo);
-
-    return count;
-}
-
-int contar_documentos_con_palabra(char *palabra) {
-  int count = 0;
-  Node* temp = loadedFiles;
-
-  while(temp != NULL) {
-      if(contar_palabras(palabra, temp->filename) > 0) {
-          count++;
-      }
-      temp = temp->next;
-  }
-
-  return count;
-}
-
-double palabrasRelevantes(char* palabra, char* documento, int num_documentos) {
-  int veces_palabra = contar_palabras(palabra, documento);
-  int num_palabras = contar_palabras(NULL, documento);
-  int num_documentos_con_palabra = contar_documentos_con_palabra(palabra);
-
-  if(num_documentos_con_palabra == 0) {
-      printf("La palabra '%s' no se encuentra en ninguno de los documentos.\n", palabra);
-      return 0.0;
-  }
-
-  double relevancia = veces_palabra / (double)num_palabras * log(num_documentos / (double)num_documentos_con_palabra);
-  return relevancia;
-}
-
-void buscarPorPalabra(char *palabra) {
-    LibroInfo libros[10000];
-    int numLibros = 0;
-
-    for(int i = 0; i < loadedFilesCount; i++) {
-        char *idLibro = loadedFiles[i].filename;
-        if (contar_palabras(palabra, idLibro) > 0) {
-            strcpy(libros[numLibros].id, idLibro);
-            extraerTitulo(idLibro, libros[numLibros].titulo);
-            libros[numLibros].palabras = contar_palabras(NULL, idLibro);
-            libros[numLibros].vecesPalabra = contar_palabras(palabra, idLibro);
-            numLibros++;
-        }
-    }
-
-    qsort(libros, numLibros, sizeof(LibroInfo), compare);
-
-    for (int i = 0; i < numLibros; i++) {
-        printf("ID: %s\n", libros[i].id);
-        printf("Título: %s\n", libros[i].titulo);
-        printf("Relevancia: %f\n\n", (double)libros[i].vecesPalabra / libros[i].palabras);
-    }
-}
-
-void mostrarPalabraEnContexto(char *tituloLibro, char *palabra) {
-    char nombreArchivo[1000];
-    sprintf(nombreArchivo, "libro/%s", tituloLibro);
+    sprintf(nombreArchivo, "libro/%s", id);
     FILE *archivo = fopen(nombreArchivo, "r");
     if (archivo == NULL) {
         printf("Error al abrir el archivo %s\n", nombreArchivo);
         return;
     }
 
-    char linea[1024];
-    while (fgets(linea, 1024, archivo) != NULL) {
-        char *posicion = strstr(linea, palabra);
-        if (posicion != NULL) {
-            printf("%s\n", linea);
+    *veces_palabra = 0;
+    char palabraArchivo[MAX_WORD_LENGTH];
+    while (fscanf(archivo, "%s", palabraArchivo) != EOF) {
+        toLowerCase(palabraArchivo);
+        if (strcmp(palabraArchivo, palabra) == 0) {
+            (*veces_palabra)++;
         }
     }
 
     fclose(archivo);
 }
 
+
+int contar_documentos_con_palabra(Libro* nodo, char* palabra) {
+    if(nodo == NULL) {
+        return 0;
+    }
+
+    int countIzq = contar_documentos_con_palabra(nodo->izq, palabra);
+    int countDer = contar_documentos_con_palabra(nodo->der, palabra);
+
+    char nombreArchivo[1000];
+    sprintf(nombreArchivo, "libro/%s", nodo->id);
+    FILE *archivo = fopen(nombreArchivo, "r");
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo %s\n", nombreArchivo);
+        return countIzq + countDer;
+    }
+
+    char palabraArchivo[MAX_WORD_LENGTH];
+    while (fscanf(archivo, "%s", palabraArchivo) != EOF) {
+        toLowerCase(palabraArchivo);
+        if (strcmp(palabraArchivo, palabra) == 0) {
+            fclose(archivo);
+            return countIzq + countDer + 1;
+        }
+    }
+
+    fclose(archivo);
+    return countIzq + countDer;
+}
+
+void buscarYContarEnArbol(Libro* nodo, char* tituloBuscado, char* palabraContar, int *veces_palabra, int *num_palabras) {
+    if(nodo != NULL) {
+        buscarYContarEnArbol(nodo->izq, tituloBuscado, palabraContar, veces_palabra, num_palabras);
+
+        if (strcmp(nodo->titulo, tituloBuscado) == 0){
+          contar_palabras(palabraContar, nodo->id, veces_palabra, num_palabras);
+
+            *num_palabras = nodo->palabras;
+            
+        }
+
+        buscarYContarEnArbol(nodo->der, tituloBuscado, palabraContar, veces_palabra, num_palabras);
+    }
+}
+
+
+
+
+void calcularRelevancia(Libro* nodo,char* tituloBuscado, char* palabra) {
+  int count2;
+  int veces_palabra;
+  int num_palabras;
+  buscarYContarEnArbol(nodo, tituloBuscado, palabra, &veces_palabra, &num_palabras);
+  count2=contar_documentos_con_palabra(nodo, palabra);
+  double relevancia = veces_palabra / (double)num_palabras * log(99 / (double)count2);
+  printf("La relevancia de la palabra %s en el libro %s es %lf\n" ,palabra, tituloBuscado, relevancia);
+      
+}
+
+void buscarPorPalabra(char *palabra) {
+    Libro libros[10000];
+    int numLibros = 99;
+
+    for(int i = 0; i < loadedFilesCount; i++) {
+        char *idLibro = loadedFiles[i].filename;
+        int veces_palabra, num_palabras;
+        contar_palabras(palabra, idLibro, &veces_palabra, &num_palabras);
+        if (veces_palabra > 0) {
+            strcpy(libros[numLibros].id, idLibro);
+            extraerTitulo(idLibro, libros[numLibros].titulo);
+            libros[numLibros].palabras = num_palabras;
+            //libros[numLibros].vecesPalabra = veces_palabra;
+            //libros[numLibros].relevancia = calcularRelevancia(root, libros[numLibros].titulo, palabra);
+            numLibros++;
+        }
+    }
+
+    qsort(libros, numLibros, sizeof(Libro), compare);
+
+    for (int i = 0; i < numLibros; i++) {
+        printf("ID: %s\n", libros[i].id);
+        printf("Título: %s\n", libros[i].titulo);
+        //printf("Relevancia: %f\n\n", libros[i].relevancia);
+    }
+}
+
+void buscarPalabraEnLibro(char* palabraBuscar, char* idLibro) {
+    char nombreArchivo[1000];
+    sprintf(nombreArchivo, "libro/%s", idLibro);
+    FILE *archivo = fopen(nombreArchivo, "r");
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo %s\n", nombreArchivo);
+        return;
+    }
+
+    char palabraArchivo[MAX_WORD_LENGTH];
+    char buffer[11][MAX_WORD_LENGTH]; // Almacena la palabra actual y las últimas 5 y próximas 5 palabras
+    int index = 0;
+
+    while (fscanf(archivo, "%s", palabraArchivo) != EOF) {
+        strcpy(buffer[index % 11], palabraArchivo);
+
+        if (index >= 10 && strcmp(buffer[(index + 1) % 11], palabraBuscar) == 0) {
+            // Almacena las siguientes 5 palabras después de encontrar la palabra buscada
+            for (int i = 0; i < 5; i++) {
+                if (fscanf(archivo, "%s", palabraArchivo) != EOF) {
+                    index++;
+                    strcpy(buffer[index % 11], palabraArchivo);
+                } else {
+                    break;
+                }
+            }
+
+            // Imprime las 5 palabras anteriores, la palabra actual y las 5 palabras posteriores
+            printf("%s %s %s %s %s %s %s %s %s %s %s\n",
+                buffer[(index + 6) % 11],
+                buffer[(index + 7) % 11],
+                buffer[(index + 8) % 11],
+                buffer[(index +9 ) % 11],
+                buffer[(index +10) % 11],
+                buffer[(index +1 ) % 11], // Palabra actual
+                buffer[(index +2 ) % 11],
+                buffer[(index +3 ) % 11],
+                buffer[(index +4 ) % 11],
+                buffer[(index +5 ) % 11],
+                buffer[index      % 11]);
+        }
+
+        index++;
+    }
+
+    fclose(archivo);
+}
+
+
+
+
+
+void buscarLibroEnArbol(Libro* nodo, char* tituloBuscado, char* palabraBuscar) {
+    if(nodo != NULL) {
+        buscarLibroEnArbol(nodo->izq, tituloBuscado, palabraBuscar);
+
+        if (strcmp(nodo->titulo, tituloBuscado) == 0){
+            buscarPalabraEnLibro(palabraBuscar, nodo->id);
+        }
+
+        buscarLibroEnArbol(nodo->der, tituloBuscado, palabraBuscar);
+    }
+}
+
+
 int main(void) {
   int opcion;
   char tituloBuscado[100];
+  char* verificador;
   char idLibro[10];
    char* documento;
   printf("                        Menú Principal                   \n");
@@ -441,19 +525,25 @@ int main(void) {
       case 4:
         printf("Ingrese el ID del libro: ");
         scanf(" %[^\n]", idLibro);
-        palabrasFrecuencia(idLibro);
+        verificador = strstr(idLibro, ".txt");
+        if (verificador) {
+          palabrasFrecuencia(idLibro);
+        } else {
+          strcat(idLibro, ".txt");
+          palabrasFrecuencia(idLibro);
+        }
       break;
       case 5:
         printf("Ingrese el nombre del libro: ");
         scanf(" %[^\n]", tituloBuscado);
-        int num_documentos = 10;
+        int num_documentos = 99;
 
         char palabra[MAX_WORD_LENGTH];
         printf("Ingrese la palabra a buscar: ");
         scanf("%s", palabra);
+        toLowerCase(palabra);
 
-        double relevancia = palabrasRelevantes(palabra, tituloBuscado, num_documentos);
-        printf("La relevancia de la palabra '%s' en el documento '%s' es: %f\n", palabra, tituloBuscado, relevancia);
+        calcularRelevancia(root,tituloBuscado,palabra);
       break;
       case 6:
         printf("Ingrese la palabra a buscar: ");
@@ -466,9 +556,8 @@ int main(void) {
       scanf(" %[^\n]", tituloBuscado);
       printf("Ingrese la palabra a buscar: ");  
       scanf(" %[^\n]", palabra);
-      printf("Palabra en su contexto:\n");
-      mostrarPalabraEnContexto(tituloBuscado, palabra);
-
+      buscarLibroEnArbol(root, tituloBuscado, palabra);
+      break;
       default:
         if (opcion<1 && opcion>8){
           printf("Opción inválida. Por favor, ingrese una opción válida.\n");
