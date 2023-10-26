@@ -5,9 +5,13 @@ Esta aplicacion permite la carga y analisis de libros en formato txt del proyect
 ## COMO COMPILAR Y EJECUTAR EL PROGRAMA
 
 1. Clonar el repositorio:
+   *git clone https://github.com/Totox01/Tarea-3-ED-Gestor-Proyecto-Gutenber*
 2. Navegar hasta el directorio del protecto:
-3. Compilar el codigo:
-4. Ejecutar la aplicacion
+   *cd Tarea-3-ED-Gestor-Proyecto-Gutenber*
+4. Compilar el codigo:
+   *gcc main.c -o GestorGutenberg*
+5. Ejecutar la aplicacion
+   *./GestorGutenberg*
 
 ## FUNCIONALIDADES
 
@@ -21,7 +25,14 @@ Esta aplicacion permite la carga y analisis de libros en formato txt del proyect
 
 
 ### PROBLEMAS CONOCIDOS CON LAS FUNCIONALIDADES
+
+- La funcion que calcula la relevancia de una palabra genera errores de calculo y retorna "nan" aveces dependiendo de si la palabra dada tiene mayuscula o no.
+- La funcion que muestra los libros que contengan una palabra dada genera errores que terminan la ejecucion del programa al ser llamada.
+
 ### FUNCIONALIDADES A MEJORAR
+
+- La funcion de relevancia de una palabra deberia demostrar las 10 mas relevantes en cambio solo sirve para calcular la relevancia de una palabra por lo que deberiamos de cambiar eso para que muestre las 10 mas relevantes
+- Mejorar los manejos de memoria en general y el rendimiento general de las funciones.
 
 
 ## CONTRIBUCIONES

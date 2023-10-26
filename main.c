@@ -433,36 +433,24 @@ void buscarPalabraEnLibro(char* palabraBuscar, char* idLibro) {
     }
 
     char palabraArchivo[MAX_WORD_LENGTH];
-    char buffer[11][MAX_WORD_LENGTH]; // Almacena la palabra actual y las últimas 5 y próximas 5 palabras
+    char buffer[11][MAX_WORD_LENGTH];
     int index = 0;
 
     while (fscanf(archivo, "%s", palabraArchivo) != EOF) {
         strcpy(buffer[index % 11], palabraArchivo);
 
-        if (index >= 10 && strcmp(buffer[(index + 1) % 11], palabraBuscar) == 0) {
-            // Almacena las siguientes 5 palabras después de encontrar la palabra buscada
-            for (int i = 0; i < 5; i++) {
-                if (fscanf(archivo, "%s", palabraArchivo) != EOF) {
-                    index++;
-                    strcpy(buffer[index % 11], palabraArchivo);
-                } else {
-                    break;
-                }
-            }
-
-            // Imprime las 5 palabras anteriores, la palabra actual y las 5 palabras posteriores
-            printf("%s %s %s %s %s %s %s %s %s %s %s\n",
+        if (index >= 10 && strcmp(buffer[(index + 6) % 11], palabraBuscar) == 0) {
+            printf("\n%s %s %s %s %s %s %s %s %s %s\n",
+                buffer[(index + 1) % 11],
+                buffer[(index + 2) % 11],
+                buffer[(index + 3) % 11],
+                buffer[(index + 4) % 11],
+                buffer[(index + 5) % 11],
                 buffer[(index + 6) % 11],
                 buffer[(index + 7) % 11],
                 buffer[(index + 8) % 11],
-                buffer[(index +9 ) % 11],
-                buffer[(index +10) % 11],
-                buffer[(index +1 ) % 11], // Palabra actual
-                buffer[(index +2 ) % 11],
-                buffer[(index +3 ) % 11],
-                buffer[(index +4 ) % 11],
-                buffer[(index +5 ) % 11],
-                buffer[index      % 11]);
+                buffer[(index + 9) % 11],
+                buffer[(index + 10) % 11]);
         }
 
         index++;
@@ -470,6 +458,7 @@ void buscarPalabraEnLibro(char* palabraBuscar, char* idLibro) {
 
     fclose(archivo);
 }
+
 
 
 
